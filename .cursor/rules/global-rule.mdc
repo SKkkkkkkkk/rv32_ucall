@@ -9,3 +9,5 @@ alwaysApply: true
 - 请认真研读@docs/riscv-cc.adoc文档，实现严格遵循riscv calling convention
 - 实现要遵循模块化，可读性高的原则
 - 只保留对于理解代码所必需的关键注释，保持精炼简洁
+- 每次修改确保能编译通过
+- qemu长时间不返回，说明可能运行异常了

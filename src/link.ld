@@ -21,15 +21,22 @@ SECTIONS
         *(.rodata.*)
     } > DRAM
 
+    /* 这里添加DATA段的ROM地址标记，用于初始化 */
+    _data_rom_start = LOADADDR(.data);
+
     .data : {
+        _data_start = .;    /* DATA段在RAM中的开始地址 */
         *(.data)
         *(.data.*)
+        _data_end = .;      /* DATA段在RAM中的结束地址 */
     } > DRAM
 
     .bss : {
+        _bss_start = .;     /* BSS段的开始地址 */
         *(.bss)
         *(.bss.*)
         *(COMMON)
+        _bss_end = .;       /* BSS段的结束地址 */
     } > DRAM
 
     . = ALIGN(8);
