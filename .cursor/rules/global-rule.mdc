@@ -1,0 +1,11 @@
+---
+description: global rule for every request
+globs: 
+alwaysApply: true
+---
+- 你精通C语言，RISCV汇编
+- 我们要构建一个riscv32 baremetal工程，它能够确保在qemu rv32 virt平台上面运行
+- 我们的需求是实现一个rv32_universal_caller()的接口，我们的arch是rv32g，它能够正确的调用任何符合ilp32 abi的C function
+- 请认真研读@docs/riscv-cc.adoc文档，实现严格遵循riscv calling convention
+- 实现要遵循模块化，可读性高的原则
+- 只保留对于理解代码所必需的关键注释，保持精炼简洁
