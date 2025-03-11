@@ -127,7 +127,10 @@ uint64_t universal_call(func_t* func) {
         // Calculate how many registers this argument would use
         int regs_needed = 0;
         switch (args[i].type) {
+            case ARG_CHAR:
+            case ARG_SHORT:
             case ARG_INT:
+            case ARG_LONG:
             case ARG_FLOAT:
             case ARG_POINTER:
                 regs_needed = 1;
@@ -148,7 +151,10 @@ uint64_t universal_call(func_t* func) {
         int regs_used_before = 0;
         for (int j = 0; j < i; j++) {
             switch (args[j].type) {
+                case ARG_CHAR:
+                case ARG_SHORT:
                 case ARG_INT:
+                case ARG_LONG:
                 case ARG_FLOAT:
                 case ARG_POINTER:
                     regs_used_before += 1;
@@ -163,7 +169,10 @@ uint64_t universal_call(func_t* func) {
         // If this argument would start at or after register 8, put on stack
         if (regs_used_before >= 8) {
             switch (args[i].type) {
+                case ARG_CHAR:
+                case ARG_SHORT:
                 case ARG_INT:
+                case ARG_LONG:
                 case ARG_POINTER:
                     stack_args[stack_idx++] = args[i].value.i;
                     break;
@@ -211,13 +220,16 @@ uint64_t universal_call(func_t* func) {
     // Call the function with arguments
     if (stack_idx > 0) {
         // We have stack arguments, need to adjust stack and copy them
-        int stack_size = stack_idx * 4;
+        int stack_size = stack_idx * 4;  // Each argument is 4 bytes (32-bit)
         
-        // First adjust stack - use a fixed size for simplicity
-        // This limits us to 16 stack arguments, but that should be enough for testing
+        // Round up stack size to maintain 16-byte alignment (128-bit)
+        stack_size = (stack_size + 15) & ~15;
+        
+        // First adjust stack - use dynamic size based on arguments
         asm volatile (
-            "addi sp, sp, -64\n"
-            ::: "memory"
+            "sub sp, sp, %0\n"
+            :: "r" (stack_size)
+            : "memory"
         );
         
         // Then copy stack arguments
@@ -249,8 +261,8 @@ uint64_t universal_call(func_t* func) {
             // Call the function
             "jalr ra, %[func], 0\n"
             
-            // Restore stack
-            "addi sp, sp, 64\n"
+            // Restore stack with dynamic size
+            "add sp, sp, %[stack_size]\n"
             
             // Capture return values (a0, a1 for all return types in ilp32)
             "mv %[ret_lo], a0\n"
@@ -268,7 +280,8 @@ uint64_t universal_call(func_t* func) {
               [a4] "r" (int_regs[4]),
               [a5] "r" (int_regs[5]),
               [a6] "r" (int_regs[6]),
-              [a7] "r" (int_regs[7])
+              [a7] "r" (int_regs[7]),
+              [stack_size] "r" (stack_size)
             
             // Clobbered registers
             : "ra", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
