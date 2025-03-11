@@ -269,5 +269,75 @@ void main(void) {
     result = universal_call(&func);
     verify_int32("test_function_pointer", result.i, 579); // 123 + 456 = 579
     
+    // Test 10: Recursive function test
+    printf("\nTest 10: Recursive function test\n");
+    func = (func_t){
+        .func = test_recursive,
+        .ret_type = RET_INT,
+        .arg_count = 1,
+        .args = (arg_t[]){
+            {ARG_INT, {.i = 5}}
+        }
+    };
+    result = universal_call(&func);
+    // 递归函数计算 5 + 4 + 3 + 2 + 1 = 15
+    verify_int32("test_recursive", result.i, 15);
+    
+    // Test 11: Many doubles test
+    printf("\nTest 11: Many doubles test\n");
+    func = (func_t){
+        .func = test_many_doubles,
+        .ret_type = RET_DOUBLE,
+        .arg_count = 6,
+        .args = (arg_t[]){
+            {ARG_DOUBLE, {.d = 1.1}},
+            {ARG_DOUBLE, {.d = 2.2}},
+            {ARG_DOUBLE, {.d = 3.3}},
+            {ARG_DOUBLE, {.d = 4.4}},
+            {ARG_DOUBLE, {.d = 5.5}},
+            {ARG_DOUBLE, {.d = 6.6}}
+        }
+    };
+    result = universal_call(&func);
+    verify_double("test_many_doubles", result.d, 23.1); // 1.1 + 2.2 + 3.3 + 4.4 + 5.5 + 6.6 = 23.1
+    
+    // Test 12: Stack alignment test
+    printf("\nTest 12: Stack alignment test\n");
+    func = (func_t){
+        .func = test_stack_alignment,
+        .ret_type = RET_LONG_LONG,
+        .arg_count = 8,
+        .args = (arg_t[]){
+            {ARG_INT, {.i = 1}},
+            {ARG_LONG_LONG, {.ll = 2LL}},
+            {ARG_INT, {.i = 3}},
+            {ARG_LONG_LONG, {.ll = 4LL}},
+            {ARG_INT, {.i = 5}},
+            {ARG_LONG_LONG, {.ll = 6LL}},
+            {ARG_INT, {.i = 7}},
+            {ARG_LONG_LONG, {.ll = 8LL}}
+        }
+    };
+    result = universal_call(&func);
+    verify_int64("test_stack_alignment", result.ll, 36); // 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 = 36
+    
+    // Test 13: Variadic function test
+    printf("\nTest 13: Variadic function test\n");
+    func = (func_t){
+        .func = test_variadic,
+        .ret_type = RET_INT,
+        .arg_count = 6,
+        .args = (arg_t[]){
+            {ARG_INT, {.i = 5}},  // 参数数量
+            {ARG_INT, {.i = 10}}, // 第一个变长参数
+            {ARG_INT, {.i = 20}}, // 第二个变长参数
+            {ARG_INT, {.i = 30}}, // 第三个变长参数
+            {ARG_INT, {.i = 40}}, // 第四个变长参数
+            {ARG_INT, {.i = 50}}  // 第五个变长参数
+        }
+    };
+    result = universal_call(&func);
+    verify_int32("test_variadic", result.i, 150); // 10 + 20 + 30 + 40 + 50 = 150
+    
     printf("\n=== All tests completed ===\n");
 }

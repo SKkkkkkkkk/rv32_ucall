@@ -61,3 +61,44 @@ typedef int32_t (*func_ptr_t)(int32_t, int32_t);
 int32_t test_function_pointer(func_ptr_t fn_ptr, int32_t a, int32_t b) {
     return fn_ptr(a, b);
 }
+
+/**
+ * Recursive function test - tests call stack handling
+ */
+int32_t test_recursive(int32_t n) {
+    if (n <= 1) return 1;
+    return n + test_recursive(n - 1);
+}
+
+/**
+ * Test with many double arguments to test 64-bit value handling
+ */
+double test_many_doubles(double a1, double a2, double a3, double a4, double a5, double a6) {
+    return a1 + a2 + a3 + a4 + a5 + a6;
+}
+
+/**
+ * Test stack alignment with mixed 32-bit and 64-bit values
+ */
+int64_t test_stack_alignment(int32_t a1, int64_t a2, int32_t a3, int64_t a4, 
+                           int32_t a5, int64_t a6, int32_t a7, int64_t a8) {
+    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
+}
+
+/**
+ * Test variadic function calling
+ */
+#include <stdarg.h>
+
+int32_t test_variadic(int count, ...) {
+    va_list args;
+    va_start(args, count);
+    
+    int32_t sum = 0;
+    for (int i = 0; i < count; i++) {
+        sum += va_arg(args, int32_t);
+    }
+    
+    va_end(args);
+    return sum;
+}
