@@ -6,6 +6,11 @@ _start:
     # 设置栈指针
     la sp, _stack_top
     
+    # 启用浮点单元 (FPU)
+    # 设置 mstatus.FS 为 01 (初始状态)
+    li t0, 0x00002000     # MSTATUS_FS_INITIAL (0x2000 = FS bits set to 01)
+    csrrs t0, mstatus, t0 # 设置 mstatus 寄存器中的 FS 位
+    
     # 初始化BSS段（清零）
     la t0, _bss_start    # t0 = BSS段开始地址
     la t1, _bss_end      # t1 = BSS段结束地址

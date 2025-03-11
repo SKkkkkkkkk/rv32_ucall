@@ -1,0 +1,63 @@
+/**
+ * Test functions for rv32_universal_caller()
+ * Each function tests different aspects of the RISC-V calling convention
+ * Note: Only scalar parameter types are supported
+ */
+
+/* Basic no-argument function */
+int32_t test_no_args(void) {
+    return 42;
+}
+
+/* Test functions with various return types */
+int32_t test_return_int32(void) { return 1; }
+int64_t test_return_int64(void) { return 0x0123456789ABCDEF; }
+float test_return_float(void) { return 3.14f; }
+double test_return_double(void) { return 2.71828; }
+void test_return_void(void) { /* Do nothing */ }
+
+/* Test with exactly 8 arguments (register passing) */
+int32_t test_reg_args(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
+                      int32_t a5, int32_t a6, int32_t a7, int32_t a8) {
+    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
+}
+
+/* Test with arguments on stack (>8 arguments) */
+int32_t test_stack_args(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
+                        int32_t a5, int32_t a6, int32_t a7, int32_t a8,
+                        int32_t a9, int32_t a10) {
+    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10;
+}
+
+/* Test mixing different scalar argument types */
+double test_mixed_types(int8_t a1, int16_t a2, int32_t a3, int64_t a4,
+                         float a5, double a6, void* a7) {
+    return a1 + a2 + a3 + a4 + a5 + a6 + (intptr_t)a7;
+}
+
+/* Test passing floating point arguments */
+double test_float_args(float a1, float a2, double a3, double a4) {
+    return a1 + a2 + a3 + a4;
+}
+
+/* Test many arguments to stress stack handling */
+int32_t test_many_args(
+    int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, 
+    int32_t a6, int32_t a7, int32_t a8, int32_t a9, int32_t a10,
+    int32_t a11, int32_t a12, int32_t a13, int32_t a14, int32_t a15, 
+    int32_t a16, int32_t a17, int32_t a18, int32_t a19, int32_t a20) {
+    
+    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 +
+           a11 + a12 + a13 + a14 + a15 + a16 + a17 + a18 + a19 + a20;
+}
+
+/* Test boundary values for integer arguments */
+int32_t test_boundary_values(int32_t min_val, int32_t max_val, int64_t big_val) {
+    return min_val + max_val + (int32_t)big_val;
+}
+
+/* Test function pointer calling */
+typedef int32_t (*func_ptr_t)(int32_t, int32_t);
+int32_t test_function_pointer(func_ptr_t fn_ptr, int32_t a, int32_t b) {
+    return fn_ptr(a, b);
+}

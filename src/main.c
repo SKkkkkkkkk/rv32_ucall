@@ -1,106 +1,273 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
+#include <limits.h>
 #include "universal_caller.h"
 
-int32_t test_arg0(void) {
-    return 1;
-}
+// Include test functions directly
+#include "test_funcs.txt"
 
-int32_t test_add2(int32_t a1, int32_t a2) {
-    return a1 + a2;
-}
+// ANSI颜色代码宏定义
+#define COLOR_RESET   "\033[0m"
+#define COLOR_RED     "\033[31m"
+#define COLOR_GREEN   "\033[32m"
 
-int32_t test_add8(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8) {
-    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
-}
-
-int32_t test_add9(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8, int32_t a9) {
-    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9;
-}
-
-int32_t test_add33(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8, int32_t a9, int32_t a10, int32_t a11, int32_t a12, int32_t a13, int32_t a14, int32_t a15, int32_t a16, int32_t a17, int32_t a18, int32_t a19, int32_t a20, int32_t a21, int32_t a22, int32_t a23, int32_t a24, int32_t a25, int32_t a26, int32_t a27, int32_t a28, int32_t a29, int32_t a30, int32_t a31, int32_t a32, int32_t a33) {
-    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14 + a15 + a16 + a17 + a18 + a19 + a20 + a21 + a22 + a23 + a24 + a25 + a26 + a27 + a28 + a29 + a30 + a31 + a32 + a33;
-}
-
-uint64_t test_func0(uint32_t a0, uint64_t a1) {
-    return a0 + a1;
-}
-
-static void verify_result(int result, int expected) {
-    if (result != expected) {
-        printf("Test failed: expected %d, got %d\n", expected, result);
+/**
+ * Print test result and verify against expected value
+ */
+static void verify_int32(const char* test_name, int32_t result, int32_t expected) {
+    if (result == expected) {
+        printf(COLOR_GREEN "✓ %s: %ld" COLOR_RESET "\n", test_name, (long)result);
     } else {
-        printf("Test passed: %d\n", result);
+        printf(COLOR_RED "✗ %s: expected %ld, got %ld" COLOR_RESET "\n", 
+               test_name, (long)expected, (long)result);
     }
 }
 
+static void verify_int64(const char* test_name, int64_t result, int64_t expected) {
+    if (result == expected) {
+        printf(COLOR_GREEN "✓ %s: 0x%llx" COLOR_RESET "\n", test_name, (unsigned long long)result);
+    } else {
+        printf(COLOR_RED "✗ %s: expected 0x%llx, got 0x%llx" COLOR_RESET "\n", 
+               test_name, (unsigned long long)expected, (unsigned long long)result);
+    }
+}
+
+static void verify_float(const char* test_name, float result, float expected) {
+    // Use small epsilon for floating point comparison
+    float epsilon = 0.0001f;
+    if (result >= expected - epsilon && result <= expected + epsilon) {
+        printf(COLOR_GREEN "✓ %s: %f" COLOR_RESET "\n", test_name, result);
+    } else {
+        printf(COLOR_RED "✗ %s: expected %f, got %f" COLOR_RESET "\n", 
+               test_name, expected, result);
+    }
+}
+
+static void verify_double(const char* test_name, double result, double expected) {
+    // Use small epsilon for floating point comparison
+    double epsilon = 0.0001;
+    if (result >= expected - epsilon && result <= expected + epsilon) {
+        printf(COLOR_GREEN "✓ %s: %f" COLOR_RESET "\n", test_name, result);
+    } else {
+        printf(COLOR_RED "✗ %s: expected %f, got %f" COLOR_RESET "\n", 
+               test_name, expected, result);
+    }
+}
+
+static int32_t helper_add(int32_t a, int32_t b) {
+    return a + b;
+}
+
+// Main function to test all cases
 void main(void) {
-    printf("Hello, RISC-V World!\n");
+    printf("=== Testing rv32_universal_caller ===\n\n");
+    
     func_t func;
-    int result32;
-    int64_t result64;
-    printf("Calling test_arg0()\n");
+    return_value_t result;
+    
+    // Test 1: No arguments
+    printf("Test 1: No arguments\n");
     func = (func_t){
-        .func = test_arg0,
+        .func = test_no_args,
         .ret_type = RET_INT,
         .arg_count = 0,
         .args = NULL
     };
-    result32 = universal_call(&func);
-    verify_result(result32, 1);
-
-    printf("Calling test_add2(1, 2)\n");
+    result = universal_call(&func);
+    verify_int32("test_no_args", result.i, 42);
+    
+    // Test 2: Various return types
+    printf("\nTest 2: Various return types\n");
+    
+    // Int32 return
     func = (func_t){
-        .func = test_add2,
+        .func = test_return_int32,
         .ret_type = RET_INT,
-        .arg_count = 2,
-        .args = (arg_t[]){{ARG_INT, {.i = 1}}, {ARG_INT, {.i = 2}}}
+        .arg_count = 0,
+        .args = NULL
     };
-    result32 = universal_call(&func);
-    verify_result(result32, 3);
-
-    printf("Calling test_add8(1, 2, 3, 4, 5, 6, 7, 8)\n");
+    result = universal_call(&func);
+    verify_int32("test_return_int32", result.i, 1);
+    
+    // Int64 return
     func = (func_t){
-        .func = test_add8,
+        .func = test_return_int64,
+        .ret_type = RET_LONG_LONG,
+        .arg_count = 0,
+        .args = NULL
+    };
+    result = universal_call(&func);
+    verify_int64("test_return_int64", result.ll, 0x0123456789ABCDEF);
+    
+    // Float return
+    func = (func_t){
+        .func = test_return_float,
+        .ret_type = RET_FLOAT,
+        .arg_count = 0,
+        .args = NULL
+    };
+    result = universal_call(&func);
+    verify_float("test_return_float", result.f, 3.14f);
+    
+    // Double return
+    func = (func_t){
+        .func = test_return_double,
+        .ret_type = RET_DOUBLE,
+        .arg_count = 0,
+        .args = NULL
+    };
+    result = universal_call(&func);
+    verify_double("test_return_double", result.d, 2.71828);
+    
+    // Void return
+    func = (func_t){
+        .func = test_return_void,
+        .ret_type = RET_VOID,
+        .arg_count = 0,
+        .args = NULL
+    };
+    universal_call(&func);
+    printf(COLOR_GREEN "✓ test_return_void called successfully" COLOR_RESET "\n");
+    
+    // Test 3: Register arguments (8 arguments)
+    printf("\nTest 3: Register arguments (8 arguments)\n");
+    func = (func_t){
+        .func = test_reg_args,
         .ret_type = RET_INT,
         .arg_count = 8,
-        .args = (arg_t[]){{ARG_INT, {.i = 1}}, {ARG_INT, {.i = 2}}, {ARG_INT, {.i = 3}}, {ARG_INT, {.i = 4}}, {ARG_INT, {.i = 5}}, {ARG_INT, {.i = 6}}, {ARG_INT, {.i = 7}}, {ARG_INT, {.i = 8}}}
+        .args = (arg_t[]){
+            {ARG_INT, {.i = 1}},
+            {ARG_INT, {.i = 2}},
+            {ARG_INT, {.i = 3}},
+            {ARG_INT, {.i = 4}},
+            {ARG_INT, {.i = 5}},
+            {ARG_INT, {.i = 6}},
+            {ARG_INT, {.i = 7}},
+            {ARG_INT, {.i = 8}}
+        }
     };
-    result32 = universal_call(&func);
-    verify_result(result32, 36);
-
-    printf("Calling test_add9(1, 2, 3, 4, 5, 6, 7, 8, 9)\n");
+    result = universal_call(&func);
+    verify_int32("test_reg_args", result.i, 36); // 1+2+3+4+5+6+7+8 = 36
+    
+    // Test 4: Stack arguments (>8 arguments)
+    printf("\nTest 4: Stack arguments (>8 arguments)\n");
     func = (func_t){
-        .func = test_add9,
+        .func = test_stack_args,
         .ret_type = RET_INT,
-        .arg_count = 9,
-        .args = (arg_t[]){{ARG_INT, {.i = 1}}, {ARG_INT, {.i = 2}}, {ARG_INT, {.i = 3}}, {ARG_INT, {.i = 4}}, {ARG_INT, {.i = 5}}, {ARG_INT, {.i = 6}}, {ARG_INT, {.i = 7}}, {ARG_INT, {.i = 8}}, {ARG_INT, {.i = 9}}}
+        .arg_count = 10,
+        .args = (arg_t[]){
+            {ARG_INT, {.i = 1}},
+            {ARG_INT, {.i = 2}},
+            {ARG_INT, {.i = 3}},
+            {ARG_INT, {.i = 4}},
+            {ARG_INT, {.i = 5}},
+            {ARG_INT, {.i = 6}},
+            {ARG_INT, {.i = 7}},
+            {ARG_INT, {.i = 8}},
+            {ARG_INT, {.i = 9}},
+            {ARG_INT, {.i = 10}}
+        }
     };
-    result32 = universal_call(&func);
-    verify_result(result32, 45);
-
-    printf("Calling test_add33(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33)\n");
+    result = universal_call(&func);
+    verify_int32("test_stack_args", result.i, 55); // 1+2+3+...+10 = 55
+    
+    // Test 5: Mixed argument types
+    printf("\nTest 5: Mixed argument types\n");
     func = (func_t){
-        .func = test_add33,
+        .func = test_mixed_types,
+        .ret_type = RET_DOUBLE,
+        .arg_count = 7,
+        .args = (arg_t[]){
+            {ARG_CHAR, {.i = 100}},             // int8_t
+            {ARG_SHORT, {.i = 2000}},           // int16_t
+            {ARG_INT, {.i = 30000}},            // int32_t
+            {ARG_LONG_LONG, {.ll = 400000LL}},  // int64_t
+            {ARG_FLOAT, {.f = 5.5f}},           // float
+            {ARG_DOUBLE, {.d = 6.6}},           // double
+            {ARG_POINTER, {.p = (void*)7}}      // void*
+        }
+    };
+    result = universal_call(&func);
+    verify_double("test_mixed_types", result.d, (int8_t)100 + (int16_t)2000 + (int32_t)30000 + (int64_t)400000 + 5.5f + 6.6 + (intptr_t)(void*)7);
+    
+    // Test 6: Floating point arguments
+    printf("\nTest 6: Floating point arguments\n");
+    func = (func_t){
+        .func = test_float_args,
+        .ret_type = RET_DOUBLE,
+        .arg_count = 4,
+        .args = (arg_t[]){
+            {ARG_FLOAT, {.f = 1.1f}},
+            {ARG_FLOAT, {.f = 2.2f}},
+            {ARG_DOUBLE, {.d = 3.3}},
+            {ARG_DOUBLE, {.d = 4.4}}
+        }
+    };
+    result = universal_call(&func);
+    verify_double("test_float_args", result.d, 11.0);
+    
+    // Test 7: Many arguments
+    printf("\nTest 7: Many arguments (20 args)\n");
+    func = (func_t){
+        .func = test_many_args,
         .ret_type = RET_INT,
-        .arg_count = 33,
-        .args = (arg_t[]){{ARG_INT, {.i = 1}}, {ARG_INT, {.i = 2}}, {ARG_INT, {.i = 3}}, {ARG_INT, {.i = 4}}, {ARG_INT, {.i = 5}}, {ARG_INT, {.i = 6}}, {ARG_INT, {.i = 7}}, {ARG_INT, {.i = 8}}, {ARG_INT, {.i = 9}}, {ARG_INT, {.i = 10}}, {ARG_INT, {.i = 11}}, {ARG_INT, {.i = 12}}, {ARG_INT, {.i = 13}}, {ARG_INT, {.i = 14}}, {ARG_INT, {.i = 15}}, {ARG_INT, {.i = 16}}, {ARG_INT, {.i = 17}}, {ARG_INT, {.i = 18}}, {ARG_INT, {.i = 19}}, {ARG_INT, {.i = 20}}, {ARG_INT, {.i = 21}}, {ARG_INT, {.i = 22}}, {ARG_INT, {.i = 23}}, {ARG_INT, {.i = 24}}, {ARG_INT, {.i = 25}}, {ARG_INT, {.i = 26}}, {ARG_INT, {.i = 27}}, {ARG_INT, {.i = 28}}, {ARG_INT, {.i = 29}}, {ARG_INT, {.i = 30}}, {ARG_INT, {.i = 31}}, {ARG_INT, {.i = 32}}, {ARG_INT, {.i = 33}}}
+        .arg_count = 20,
+        .args = (arg_t[]){
+            {ARG_INT, {.i = 1}},
+            {ARG_INT, {.i = 2}},
+            {ARG_INT, {.i = 3}},
+            {ARG_INT, {.i = 4}},
+            {ARG_INT, {.i = 5}},
+            {ARG_INT, {.i = 6}},
+            {ARG_INT, {.i = 7}},
+            {ARG_INT, {.i = 8}},
+            {ARG_INT, {.i = 9}},
+            {ARG_INT, {.i = 10}},
+            {ARG_INT, {.i = 11}},
+            {ARG_INT, {.i = 12}},
+            {ARG_INT, {.i = 13}},
+            {ARG_INT, {.i = 14}},
+            {ARG_INT, {.i = 15}},
+            {ARG_INT, {.i = 16}},
+            {ARG_INT, {.i = 17}},
+            {ARG_INT, {.i = 18}},
+            {ARG_INT, {.i = 19}},
+            {ARG_INT, {.i = 20}}
+        }
     };
-    result32 = universal_call(&func);
-    verify_result(result32, 561);
-
-    printf("Calling test_func0(1, 4,294,967,296)\n");
+    result = universal_call(&func);
+    verify_int32("test_many_args", result.i, 210); // Sum of 1 to 20 = 210
+    
+    // Test 8: Boundary values
+    printf("\nTest 8: Boundary values\n");
     func = (func_t){
-        .func = test_func0,
-        .ret_type = RET_LONG_LONG,
-        .arg_count = 2,
-        .args = (arg_t[]){{ARG_INT, {.i = 1}}, {ARG_LONG_LONG, {.ll = 4294967296}}}
+        .func = test_boundary_values,
+        .ret_type = RET_INT,
+        .arg_count = 3,
+        .args = (arg_t[]){
+            {ARG_INT, {.i = INT32_MIN}},
+            {ARG_INT, {.i = INT32_MAX}},
+            {ARG_LONG_LONG, {.ll = 0x1234567887654321LL}}
+        }
     };
-    result64 = universal_call(&func);
-    if(result64 != 4294967297) {
-        printf("Test failed: expected 4294967297, got %lld\n", result64);
-    } else {
-        printf("Test passed: %lld\n", result64);
-    }
+    result = universal_call(&func);
+    verify_int32("test_boundary_values", result.i, INT32_MIN + INT32_MAX + (int32_t)0x1234567887654321LL);
+    
+    // Test 9: Function pointer
+    printf("\nTest 9: Function pointer\n");
+    func = (func_t){
+        .func = test_function_pointer,
+        .ret_type = RET_INT,
+        .arg_count = 3,
+        .args = (arg_t[]){
+            {ARG_POINTER, {.p = helper_add}},
+            {ARG_INT, {.i = 123}},
+            {ARG_INT, {.i = 456}}
+        }
+    };
+    result = universal_call(&func);
+    verify_int32("test_function_pointer", result.i, 579); // 123 + 456 = 579
+    
+    printf("\n=== All tests completed ===\n");
 }

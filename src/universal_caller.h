@@ -41,6 +41,21 @@ typedef enum {
 } ret_type_t;
 
 /**
+ * Union representing function return values of different types
+ */
+typedef union {
+    char c;
+    short s;
+    int i;
+    long l;
+    long long ll;
+    float f;
+    double d;
+    void *p;
+    uint64_t raw;   // Raw 64-bit value (for internal use)
+} return_value_t;
+
+/**
  * Union for passing argument values of different types
  */
 typedef union {
@@ -73,8 +88,8 @@ typedef struct {
  * Call a function described by the func_t structure
  *
  * @param func Pointer to the func_t structure containing function information
- * @return 64-bit value containing the return value
+ * @return Union containing the return value in the appropriate type field
  */
-uint64_t universal_call(func_t* func);
+return_value_t universal_call(func_t* func);
 
 #endif /* UNIVERSAL_CALLER_H */ 

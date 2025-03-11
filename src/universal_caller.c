@@ -7,16 +7,20 @@
  * Call a function described by the func_t structure
  *
  * @param func Pointer to the func_t structure containing function information
- * @return 64-bit value containing the return value
+ * @return Union containing the return value in the appropriate type field
  */
-uint64_t universal_call(func_t* func) {
-    if (!func) return 0;
+return_value_t universal_call(func_t* func) {
+    if (!func) {
+        return_value_t zero_result = {0};
+        return zero_result;
+    }
     
     void *function = func->func;
+    return_value_t result = {0};
     union {
         uint64_t u64;
         uint32_t u32[2];
-    } result = {0};
+    } raw_result = {0};
     int arg_count = func->arg_count;
     arg_t *args = func->args;
     
@@ -268,8 +272,8 @@ uint64_t universal_call(func_t* func) {
             "mv %[ret_lo], a0\n"
             "mv %[ret_hi], a1\n"
             
-            : [ret_lo] "=r" (result.u32[0]),
-              [ret_hi] "=r" (result.u32[1])
+            : [ret_lo] "=r" (raw_result.u32[0]),
+              [ret_hi] "=r" (raw_result.u32[1])
             
             : [func] "r" (function),
               // Integer registers
@@ -307,8 +311,8 @@ uint64_t universal_call(func_t* func) {
             "mv %[ret_lo], a0\n"
             "mv %[ret_hi], a1\n"
             
-            : [ret_lo] "=r" (result.u32[0]),
-              [ret_hi] "=r" (result.u32[1])
+            : [ret_lo] "=r" (raw_result.u32[0]),
+              [ret_hi] "=r" (raw_result.u32[1])
             
             : [func] "r" (function),
               // Integer registers
@@ -327,5 +331,8 @@ uint64_t universal_call(func_t* func) {
         );
     }
 
-    return result.u64;
+    // 根据函数的返回类型设置result的适当字段
+    result.raw = raw_result.u64;
+    
+    return result;
 } 

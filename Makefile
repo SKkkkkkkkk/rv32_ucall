@@ -12,7 +12,7 @@ DEP_DIR = $(BUILD_DIR)/deps
 
 # 编译标志
 ARCH = -march=rv32g -mabi=ilp32
-OPT_FLAGS = -Ofast -g3 -Wall -Wextra -Wno-main -fanalyzer
+OPT_FLAGS = -O2 -g3 -Wall -Wextra -Wno-main -fanalyzer
 CFLAGS = $(ARCH) $(OPT_FLAGS) -MMD -MP -MF $(DEP_DIR)/$*.d
 LDFLAGS = $(ARCH) \
 -static -nostartfiles \
