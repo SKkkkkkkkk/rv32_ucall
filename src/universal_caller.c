@@ -9,7 +9,7 @@
  * @param func Pointer to the func_t structure containing function information
  * @return Union containing the return value in the appropriate type field
  */
-return_value_t universal_call(func_t* func) {
+return_value_t universal_caller(func_t* func) {
     if (!func) {
         return_value_t zero_result = {0};
         return zero_result;

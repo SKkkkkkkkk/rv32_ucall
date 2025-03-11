@@ -74,7 +74,7 @@ void main(void) {
         .arg_count = 0,
         .args = NULL
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_int32("test_no_args", result.i, 42);
     
     // Test 2: Various return types
@@ -87,7 +87,7 @@ void main(void) {
         .arg_count = 0,
         .args = NULL
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_int32("test_return_int32", result.i, 1);
     
     // Int64 return
@@ -97,7 +97,7 @@ void main(void) {
         .arg_count = 0,
         .args = NULL
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_int64("test_return_int64", result.ll, 0x0123456789ABCDEF);
     
     // Float return
@@ -107,7 +107,7 @@ void main(void) {
         .arg_count = 0,
         .args = NULL
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_float("test_return_float", result.f, 3.14f);
     
     // Double return
@@ -117,7 +117,7 @@ void main(void) {
         .arg_count = 0,
         .args = NULL
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_double("test_return_double", result.d, 2.71828);
     
     // Void return
@@ -127,7 +127,7 @@ void main(void) {
         .arg_count = 0,
         .args = NULL
     };
-    universal_call(&func);
+    universal_caller(&func);
     printf(COLOR_GREEN "✓ test_return_void called successfully" COLOR_RESET "\n");
     
     // Test 3: Register arguments (8 arguments)
@@ -147,7 +147,7 @@ void main(void) {
             {ARG_INT, {.i = 8}}
         }
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_int32("test_reg_args", result.i, 36); // 1+2+3+4+5+6+7+8 = 36
     
     // Test 4: Stack arguments (>8 arguments)
@@ -169,7 +169,7 @@ void main(void) {
             {ARG_INT, {.i = 10}}
         }
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_int32("test_stack_args", result.i, 55); // 1+2+3+...+10 = 55
     
     // Test 5: Mixed argument types
@@ -188,7 +188,7 @@ void main(void) {
             {ARG_POINTER, {.p = (void*)7}}      // void*
         }
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_double("test_mixed_types", result.d, (int8_t)100 + (int16_t)2000 + (int32_t)30000 + (int64_t)400000 + 5.5f + 6.6 + (intptr_t)(void*)7);
     
     // Test 6: Floating point arguments
@@ -204,7 +204,7 @@ void main(void) {
             {ARG_DOUBLE, {.d = 4.4}}
         }
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_double("test_float_args", result.d, 11.0);
     
     // Test 7: Many arguments
@@ -236,7 +236,7 @@ void main(void) {
             {ARG_INT, {.i = 20}}
         }
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_int32("test_many_args", result.i, 210); // Sum of 1 to 20 = 210
     
     // Test 8: Boundary values
@@ -251,7 +251,7 @@ void main(void) {
             {ARG_LONG_LONG, {.ll = 0x1234567887654321LL}}
         }
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_int32("test_boundary_values", result.i, INT32_MIN + INT32_MAX + (int32_t)0x1234567887654321LL);
     
     // Test 9: Function pointer
@@ -266,7 +266,7 @@ void main(void) {
             {ARG_INT, {.i = 456}}
         }
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_int32("test_function_pointer", result.i, 579); // 123 + 456 = 579
     
     // Test 10: Recursive function test
@@ -279,7 +279,7 @@ void main(void) {
             {ARG_INT, {.i = 5}}
         }
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     // 递归函数计算 5 + 4 + 3 + 2 + 1 = 15
     verify_int32("test_recursive", result.i, 15);
     
@@ -298,7 +298,7 @@ void main(void) {
             {ARG_DOUBLE, {.d = 6.6}}
         }
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_double("test_many_doubles", result.d, 23.1); // 1.1 + 2.2 + 3.3 + 4.4 + 5.5 + 6.6 = 23.1
     
     // Test 12: Stack alignment test
@@ -318,7 +318,7 @@ void main(void) {
             {ARG_LONG_LONG, {.ll = 8LL}}
         }
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_int64("test_stack_alignment", result.ll, 36); // 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 = 36
     
     // Test 13: Variadic function test
@@ -336,7 +336,7 @@ void main(void) {
             {ARG_INT, {.i = 50}}  // 第五个变长参数
         }
     };
-    result = universal_call(&func);
+    result = universal_caller(&func);
     verify_int32("test_variadic", result.i, 150); // 10 + 20 + 30 + 40 + 50 = 150
     
     printf("\n=== All tests completed ===\n");
