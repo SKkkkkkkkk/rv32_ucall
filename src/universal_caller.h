@@ -52,7 +52,7 @@ typedef union {
     float f;
     double d;
     void *p;
-    uint64_t _raw64;   // Raw 64-bit value (for internal use)
+    uint32_t _raw32[2]; // Raw 32-bit value (for internal use)
 } return_value_t;
 
 /**
