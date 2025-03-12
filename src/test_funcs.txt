@@ -30,9 +30,9 @@ int32_t test_stack_args(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
 }
 
 /* Test mixing different scalar argument types */
-double test_mixed_types(int8_t a1, int16_t a2, int32_t a3, int64_t a4,
+double test_mixed_types(char a1, short a2, int a3, long long a4,
                          float a5, double a6, void* a7) {
-    return a1 + a2 + a3 + a4 + a5 + a6 + (intptr_t)a7;
+    return (int8_t)a1 + a2 + a3 + a4 + a5 + a6 + (intptr_t)a7;
 }
 
 /* Test passing floating point arguments */

@@ -179,17 +179,17 @@ void main(void) {
         .ret_type = RET_DOUBLE,
         .arg_count = 7,
         .args = (arg_t[]){
-            {ARG_CHAR, {.i = 100}},             // int8_t
-            {ARG_SHORT, {.i = 2000}},           // int16_t
-            {ARG_INT, {.i = 30000}},            // int32_t
-            {ARG_LONG_LONG, {.ll = 400000LL}},  // int64_t
-            {ARG_FLOAT, {.f = 5.5f}},           // float
+            {ARG_CHAR, {.c = -1}},             // char
+            {ARG_SHORT, {.s = -2}},           // short
+            {ARG_INT, {.i = 30000}},            // int
+            {ARG_LONG_LONG, {.ll = 400000LL}},  // long long
+            {ARG_FLOAT, {.f = -5.5f}},           // float
             {ARG_DOUBLE, {.d = 6.6}},           // double
             {ARG_POINTER, {.p = (void*)7}}      // void*
         }
     };
     result = universal_caller(&func);
-    verify_double("test_mixed_types", result.d, (int8_t)100 + (int16_t)2000 + (int32_t)30000 + (int64_t)400000 + 5.5f + 6.6 + (intptr_t)(void*)7);
+    verify_double("test_mixed_types", result.d, (signed char)-1 + (short)-2 + (int)30000 + (long long)400000 + -5.5f + 6.6 + (intptr_t)(void*)7);
     
     // Test 6: Floating point arguments
     printf("\nTest 6: Floating point arguments\n");
@@ -338,6 +338,6 @@ void main(void) {
     };
     result = universal_caller(&func);
     verify_int32("test_variadic", result.i, 150); // 10 + 20 + 30 + 40 + 50 = 150
-    
+
     printf("\n=== All tests completed ===\n");
 }

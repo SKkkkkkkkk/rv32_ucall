@@ -332,7 +332,7 @@ return_value_t universal_caller(func_t* func) {
     }
 
     // 根据函数的返回类型设置result的适当字段
-    result.raw = raw_result.u64;
+    result._raw64 = raw_result.u64;
     
     return result;
 } 

@@ -52,18 +52,21 @@ typedef union {
     float f;
     double d;
     void *p;
-    uint64_t raw;   // Raw 64-bit value (for internal use)
+    uint64_t _raw64;   // Raw 64-bit value (for internal use)
 } return_value_t;
 
 /**
  * Union for passing argument values of different types
  */
 typedef union {
-    int i;
-    long long ll;
-    float f;
-    double d;
-    void *p;
+    int32_t c; // char
+    int32_t s; // short
+    int32_t i; // int
+    int32_t l; // long
+    int64_t ll; // long long
+    float f; // float
+    double d; // double
+    void *p; // pointer
 } arg_value_t;
 
 /**
