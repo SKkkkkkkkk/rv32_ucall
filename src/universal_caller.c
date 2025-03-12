@@ -3,7 +3,11 @@
 #include <stdint.h>
 #include <assert.h>
 
-#define XLEN 4 // 32bits = 4 * 8B 
+#ifndef __riscv_float_abi_soft
+#   error "only ilp32 abi supported for now"
+#endif
+
+#define XLEN 4 // 32bits = 4 * 8B = 32B
 
 //! (64 * XLEN bits)
 #define MAX_STACK_ARGS_SIZE 64
