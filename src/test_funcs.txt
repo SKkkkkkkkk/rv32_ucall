@@ -5,9 +5,7 @@
  */
 
 /* Basic no-argument function */
-int32_t test_no_args(void) {
-    return 42;
-}
+int32_t test_no_args(void) { return 42; }
 
 /* Test functions with various return types */
 int32_t test_return_int32(void) { return 1; }
@@ -19,70 +17,73 @@ void test_return_void(void) { /* Do nothing */ }
 /* Test with exactly 8 arguments (register passing) */
 int32_t test_reg_args(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
                       int32_t a5, int32_t a6, int32_t a7, int32_t a8) {
-    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
+  return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
 }
 
 /* Test with arguments on stack (>8 arguments) */
 int32_t test_stack_args(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
                         int32_t a5, int32_t a6, int32_t a7, int32_t a8,
                         int32_t a9, int32_t a10) {
-    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10;
+  return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10;
 }
 
 /* Test mixing different scalar argument types */
-double test_mixed_types(char a1, short a2, int a3, long long a4,
-                         float a5, double a6, void* a7) {
-    return (int8_t)a1 + a2 + a3 + a4 + a5 + a6 + (intptr_t)a7;
+double test_mixed_types(char a1, short a2, int a3, long long a4, float a5,
+                        double a6, void *a7) {
+  return (int8_t)a1 + a2 + a3 + a4 + a5 + a6 + (intptr_t)a7;
 }
 
 /* Test passing floating point arguments */
 double test_float_args(float a1, float a2, double a3, double a4) {
-    return a1 + a2 + a3 + a4;
+  return a1 + a2 + a3 + a4;
 }
 
 /* Test many arguments to stress stack handling */
-int32_t test_many_args(
-    int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, 
-    int32_t a6, int32_t a7, int32_t a8, int32_t a9, int32_t a10,
-    int32_t a11, int32_t a12, int32_t a13, int32_t a14, int32_t a15, 
-    int32_t a16, int32_t a17, int32_t a18, int32_t a19, int32_t a20) {
-    
-    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 +
-           a11 + a12 + a13 + a14 + a15 + a16 + a17 + a18 + a19 + a20;
+int32_t test_many_args(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
+                       int32_t a5, int32_t a6, int32_t a7, int32_t a8,
+                       int32_t a9, int32_t a10, int32_t a11, int32_t a12,
+                       int32_t a13, int32_t a14, int32_t a15, int32_t a16,
+                       int32_t a17, int32_t a18, int32_t a19, int32_t a20) {
+
+  return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 +
+         a14 + a15 + a16 + a17 + a18 + a19 + a20;
 }
 
 /* Test boundary values for integer arguments */
-int32_t test_boundary_values(int32_t min_val, int32_t max_val, int64_t big_val) {
-    return min_val + max_val + (int32_t)big_val;
+int32_t test_boundary_values(int32_t min_val, int32_t max_val,
+                             int64_t big_val) {
+  return min_val + max_val + (int32_t)big_val;
 }
 
 /* Test function pointer calling */
 typedef int32_t (*func_ptr_t)(int32_t, int32_t);
 int32_t test_function_pointer(func_ptr_t fn_ptr, int32_t a, int32_t b) {
-    return fn_ptr(a, b);
+  return fn_ptr(a, b);
 }
 
 /**
  * Recursive function test - tests call stack handling
  */
 int32_t test_recursive(int32_t n) {
-    if (n <= 1) return 1;
-    return n + test_recursive(n - 1);
+  if (n <= 1)
+    return 1;
+  return n + test_recursive(n - 1);
 }
 
 /**
  * Test with many double arguments to test 64-bit value handling
  */
-double test_many_doubles(double a1, double a2, double a3, double a4, double a5, double a6) {
-    return a1 + a2 + a3 + a4 + a5 + a6;
+double test_many_doubles(double a1, double a2, double a3, double a4, double a5,
+                         double a6) {
+  return a1 + a2 + a3 + a4 + a5 + a6;
 }
 
 /**
  * Test stack alignment with mixed 32-bit and 64-bit values
  */
-int64_t test_stack_alignment(int32_t a1, int64_t a2, int32_t a3, int64_t a4, 
-                           int32_t a5, int64_t a6, int32_t a7, int64_t a8) {
-    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
+int64_t test_stack_alignment(int32_t a1, int64_t a2, int32_t a3, int64_t a4,
+                             int32_t a5, int64_t a6, int32_t a7, int64_t a8) {
+  return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
 }
 
 /**
@@ -91,41 +92,43 @@ int64_t test_stack_alignment(int32_t a1, int64_t a2, int32_t a3, int64_t a4,
 #include <stdarg.h>
 
 int32_t test_variadic(int count, ...) {
-    va_list args;
-    va_start(args, count);
-    
-    int32_t sum = 0;
-    for (int i = 0; i < count; i++) {
-        sum += va_arg(args, int32_t);
-    }
-    
-    va_end(args);
-    return sum;
+  va_list args;
+  va_start(args, count);
+
+  int32_t sum = 0;
+  for (int i = 0; i < count; i++) {
+    sum += va_arg(args, int32_t);
+  }
+
+  va_end(args);
+  return sum;
 }
 
 /**
  * Test complex parameter combinations that exceed 8 parameters
  * Tests handling of different sized types on stack
  */
-int64_t test_complex_stack_params(int8_t a1, uint16_t a2, int32_t a3, uint64_t a4,
-                                 float a5, double a6, void* a7, int8_t a8,
-                                 uint32_t a9, int64_t a10, float a11, double a12) {
-    return a1 + a2 + a3 + a4 + a5 + a6 + (intptr_t)a7 + a8 + a9 + a10 + a11 + a12;
+int64_t test_complex_stack_params(int8_t a1, uint16_t a2, int32_t a3,
+                                  uint64_t a4, float a5, double a6, void *a7,
+                                  int8_t a8, uint32_t a9, int64_t a10,
+                                  float a11, double a12) {
+  return a1 + a2 + a3 + a4 + a5 + a6 + (intptr_t)a7 + a8 + a9 + a10 + a11 + a12;
 }
 
 /**
  * Test unsigned types with various bit widths
  */
-uint64_t test_unsigned_types(uint8_t a1, uint16_t a2, uint32_t a3, uint64_t a4) {
-    return a1 + a2 + a3 + a4;
+uint64_t test_unsigned_types(uint8_t a1, uint16_t a2, uint32_t a3,
+                             uint64_t a4) {
+  return a1 + a2 + a3 + a4;
 }
 
 /**
  * Test many floating point arguments (more than 8 fa registers)
  */
-float test_many_floats(int64_t a, float f1, float f2, float f3, float f4, float f5, 
-                      float f6, float f7, float f8, float f9) {
-    return a + f1 + f2 + f3 + f4 + f5 + f6 + f7 + f8 + f9;
+float test_many_floats(int64_t a, float f1, float f2, float f3, float f4,
+                       float f5, float f6, float f7, float f8, float f9) {
+  return a + f1 + f2 + f3 + f4 + f5 + f6 + f7 + f8 + f9;
 }
 
 /**
@@ -133,24 +136,25 @@ float test_many_floats(int64_t a, float f1, float f2, float f3, float f4, float 
  * This tests proper register allocation between GPRs and FPRs
  */
 double test_mixed_many_args(int32_t a1, float f1, int32_t a2, float f2,
-                          int32_t a3, float f3, int32_t a4, float f4,
-                          int32_t a5, float f5, int32_t a6, float f6,
-                          int32_t a7, float f7, int32_t a8, float f8) {
-    return a1 + f1 + a2 + f2 + a3 + f3 + a4 + f4 + a5 + f5 + a6 + f6 + a7 + f7 + a8 + f8;
+                            int32_t a3, float f3, int32_t a4, float f4,
+                            int32_t a5, float f5, int32_t a6, float f6,
+                            int32_t a7, float f7, int32_t a8, float f8) {
+  return a1 + f1 + a2 + f2 + a3 + f3 + a4 + f4 + a5 + f5 + a6 + f6 + a7 + f7 +
+         a8 + f8;
 }
 
 /**
  * Test extreme values for floating point arguments
  */
 #pragma GCC push_options
-#pragma GCC optimize ("no-fast-math")
+#pragma GCC optimize("no-fast-math")
 double test_float_extremes(float zero, float inf, float neg_inf, float nan,
-                          double min_normal, double max_normal) {
-    // Simple operations with special values
-    if ((zero == 0.0f) && isinf(inf) && isinf(neg_inf) && isnan(nan)) {
-        return min_normal + max_normal;
-    }
-    return 0.0;
+                           double min_normal, double max_normal) {
+  // Simple operations with special values
+  if ((zero == 0.0f) && isinf(inf) && isinf(neg_inf) && isnan(nan)) {
+    return min_normal + max_normal;
+  }
+  return 0.0;
 }
 #pragma GCC pop_options
 
@@ -158,19 +162,17 @@ double test_float_extremes(float zero, float inf, float neg_inf, float nan,
  * Test mixing signed and unsigned with bit masking operations
  */
 uint64_t test_bit_operations(int8_t a1, uint16_t a2, int32_t a3, uint64_t a4) {
-    return ((uint64_t)(uint8_t)a1 & 0xFF) | 
-           ((uint64_t)a2 << 8) | 
-           ((uint64_t)(uint32_t)a3 << 24) |
-           (a4 & 0xFFFFFFFF00000000ULL);
+  return ((uint64_t)(uint8_t)a1 & 0xFF) | ((uint64_t)a2 << 8) |
+         ((uint64_t)(uint32_t)a3 << 24) | (a4 & 0xFFFFFFFF00000000ULL);
 }
 
 /**
  * Test with maximum number of floating point register arguments
  * plus additional float arguments that must go on stack
  */
-double test_float_reg_and_stack(
-    double d1, double d2, double d3, double d4, double d5, double d6, double d7, double d8,
-    double d9, double d10, double d11, double d12) {
-    
-    return d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8 + d9 + d10 + d11 + d12;
+double test_float_reg_and_stack(double d1, double d2, double d3, double d4,
+                                double d5, double d6, double d7, double d8,
+                                double d9, double d10, double d11, double d12) {
+
+  return d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8 + d9 + d10 + d11 + d12;
 }

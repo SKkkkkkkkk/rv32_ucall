@@ -9,27 +9,29 @@
 #define UART_LSR_TX_IDLE 0x20        // 发送器空闲
 
 void uart_init(void) {
-    // QEMU的UART不需要进行额外的初始化
+  // QEMU的UART不需要进行额外的初始化
 }
 
 void uart_putc(char ch) {
-    volatile uint8_t *uart_lsr = (volatile uint8_t *)UART_LSR;
-    volatile uint8_t *uart_thr = (volatile uint8_t *)UART_THR;
-    
-    while ((*uart_lsr & UART_LSR_TX_IDLE) == 0);
-    *uart_thr = ch;
+  volatile uint8_t *uart_lsr = (volatile uint8_t *)UART_LSR;
+  volatile uint8_t *uart_thr = (volatile uint8_t *)UART_THR;
+
+  while ((*uart_lsr & UART_LSR_TX_IDLE) == 0)
+    ;
+  *uart_thr = ch;
 }
 
 char uart_getc(void) {
-    volatile uint8_t *uart_lsr = (volatile uint8_t *)UART_LSR;
-    volatile uint8_t *uart_rhr = (volatile uint8_t *)UART_RHR;
-    
-    while ((*uart_lsr & UART_LSR_RX_READY) == 0);
-    return *uart_rhr;
+  volatile uint8_t *uart_lsr = (volatile uint8_t *)UART_LSR;
+  volatile uint8_t *uart_rhr = (volatile uint8_t *)UART_RHR;
+
+  while ((*uart_lsr & UART_LSR_RX_READY) == 0)
+    ;
+  return *uart_rhr;
 }
 
 void uart_puts(const char *str) {
-    while (*str) {
-        uart_putc(*str++);
-    }
+  while (*str) {
+    uart_putc(*str++);
+  }
 }
