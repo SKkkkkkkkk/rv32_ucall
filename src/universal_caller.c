@@ -3,8 +3,14 @@
 #include <stdint.h>
 #include <assert.h>
 
-#ifndef __riscv_float_abi_soft
-#   error "only ilp32 abi supported for now"
+#if __riscv_float_abi_soft==1
+#   pragma message ("ilp32")
+#elif __riscv_float_abi_single==1
+#   pragma message ("ilp32f")
+#elif __riscv_float_abi_double==1
+#   pragma message ("ilp32d")
+#else
+#   error "unknown float abi"
 #endif
 
 #define XLEN 4 // 32bits = 4 * 8B = 32B
@@ -12,6 +18,12 @@
 //! (64 * XLEN bits)
 #define MAX_STACK_ARGS_SIZE 64
 
+typedef union {
+    float f;
+    double d;
+    uint32_t raw32[2];
+    uint64_t raw64;
+} fp_reg_t;
 
 /**
  * 该实现将SP列入clobbers
@@ -36,45 +48,91 @@ return_value_t universal_caller(func_t* func) {
     void *function = func->func;
     int32_t integar_argument_regs[8] = {0};  // a0-a7
     uint32_t integar_argument_regs_index = 0;
+#if __riscv_float_abi_soft != 1
+    return_value_t result_fp;
+    fp_reg_t fp_argument_regs[8] = {0};  // f0-f7
+    uint32_t fp_argument_regs_index = 0;
+#endif
     uint32_t stack_args[MAX_STACK_ARGS_SIZE] = {0};
     uint32_t stack_args_index = 0;
     uint32_t stack_args_size_needed = 0;
     
+#define HANDLE_INTEGER_CALLING_CONVENTION_1XLEN \
+    INTEGER_CALLING_CONVENTION_1XLEN: \
+    if (integar_argument_regs_index < 8) { \
+        integar_argument_regs[integar_argument_regs_index++] = func->args[i].value.i; \
+    } else { \
+        assert(stack_args_index < MAX_STACK_ARGS_SIZE); \
+        stack_args[stack_args_index++] = func->args[i].value.i; \
+    }
+#define HANDLE_INTEGER_CALLING_CONVENTION_2XLEN \
+    INTEGER_CALLING_CONVENTION_2XLEN: \
+    if (integar_argument_regs_index <= 6) { \
+        integar_argument_regs[integar_argument_regs_index++] = (uint32_t)func->args[i].value.ll; \
+        integar_argument_regs[integar_argument_regs_index++] = (uint32_t)(func->args[i].value.ll >> 32); \
+    } else if (integar_argument_regs_index == 7) { \
+        integar_argument_regs[integar_argument_regs_index++] = (uint32_t)func->args[i].value.ll; \
+        assert(stack_args_index < MAX_STACK_ARGS_SIZE); \
+        stack_args[stack_args_index++] = (uint32_t)(func->args[i].value.ll >> 32); \
+    } else { \
+        stack_args_index = ((stack_args_index + 1) & ~1); /* address needs to be aligned to 2XLEN */ \
+        assert(stack_args_index < MAX_STACK_ARGS_SIZE); \
+        stack_args[stack_args_index++] = (uint32_t)func->args[i].value.ll; \
+        assert(stack_args_index < MAX_STACK_ARGS_SIZE); \
+        stack_args[stack_args_index++] = (uint32_t)(func->args[i].value.ll >> 32); \
+    }
+
     for (int i = 0; i < func->arg_count; i++) {
         switch (func->args[i].type) {
+            // Integer
             case ARG_CHAR:
             case ARG_SHORT:
             case ARG_INT:
             case ARG_LONG:
-            case ARG_FLOAT:
             case ARG_POINTER:
-                if (integar_argument_regs_index < 8) {
-                    integar_argument_regs[integar_argument_regs_index++] = func->args[i].value.i;
-                } else {
-                    assert(stack_args_index < MAX_STACK_ARGS_SIZE);
-                    stack_args[stack_args_index++] = func->args[i].value.i;
-                }
+                HANDLE_INTEGER_CALLING_CONVENTION_1XLEN
                 break;
             case ARG_LONG_LONG:
-            case ARG_DOUBLE:
-                if (integar_argument_regs_index <= 6) {
-                    integar_argument_regs[integar_argument_regs_index++] = (uint32_t)func->args[i].value.ll;
-                    integar_argument_regs[integar_argument_regs_index++] = (uint32_t)(func->args[i].value.ll >> 32);
-                } else if (integar_argument_regs_index == 7) {
-                    integar_argument_regs[integar_argument_regs_index++] = (uint32_t)func->args[i].value.ll;
-                    assert(stack_args_index < MAX_STACK_ARGS_SIZE);
-                    stack_args[stack_args_index++] = (uint32_t)(func->args[i].value.ll >> 32);
-                } else {
-                    assert(stack_args_index < MAX_STACK_ARGS_SIZE);
-                    stack_args[stack_args_index++] = (uint32_t)func->args[i].value.ll;
-                    assert(stack_args_index < MAX_STACK_ARGS_SIZE);
-                    stack_args[stack_args_index++] = (uint32_t)(func->args[i].value.ll >> 32);
-                }
+                HANDLE_INTEGER_CALLING_CONVENTION_2XLEN
                 break;
+            // Floating-point
+        #if __riscv_float_abi_soft == 1
+            case ARG_FLOAT:
+                goto INTEGER_CALLING_CONVENTION_1XLEN;
+            case ARG_DOUBLE:
+                goto INTEGER_CALLING_CONVENTION_2XLEN;
+        #elif __riscv_float_abi_single == 1
+            case ARG_FLOAT:
+                if (fp_argument_regs_index < 8) {
+                    fp_argument_regs[fp_argument_regs_index++].f = func->args[i].value.f;
+                    break;
+                }
+                goto INTEGER_CALLING_CONVENTION_1XLEN;
+            case ARG_DOUBLE:
+                goto INTEGER_CALLING_CONVENTION_2XLEN;
+        #elif __riscv_float_abi_double == 1
+            case ARG_FLOAT:
+                if (fp_argument_regs_index < 8) {
+                    fp_argument_regs[fp_argument_regs_index].f = func->args[i].value.f;
+                    fp_argument_regs[fp_argument_regs_index].raw32[1] = 0xFFFFFFFF; // 1-extended (NaN-boxed) to FLEN bits
+                    fp_argument_regs_index++;
+                    break;
+                }
+                goto INTEGER_CALLING_CONVENTION_1XLEN;
+            case ARG_DOUBLE:
+                if (fp_argument_regs_index < 8) {
+                    fp_argument_regs[fp_argument_regs_index++].d = func->args[i].value.d;
+                    break;
+                }
+                goto INTEGER_CALLING_CONVENTION_2XLEN;
+        #else
+            #error "unknown abi"
+        #endif
             default:
-                assert(0); // wtf
+                assert(0); // unknown argument type
         }
     }
+
     if (stack_args_index > 0) {
         stack_args_size_needed = ((stack_args_index * XLEN) + 15) & ~15;
     }
@@ -106,39 +164,93 @@ return_value_t universal_caller(func_t* func) {
     // Common function call
     asm volatile (
         // Set up integer arguments (a0-a7)
-        "mv a0, %[a0]\n"
-        "mv a1, %[a1]\n"
-        "mv a2, %[a2]\n"
-        "mv a3, %[a3]\n"
-        "mv a4, %[a4]\n"
-        "mv a5, %[a5]\n"
-        "mv a6, %[a6]\n"
-        "mv a7, %[a7]\n"
+        "lw a0, %[a0]\n"
+        "lw a1, %[a1]\n"
+        "lw a2, %[a2]\n"
+        "lw a3, %[a3]\n"
+        "lw a4, %[a4]\n"
+        "lw a5, %[a5]\n"
+        "lw a6, %[a6]\n"
+        "lw a7, %[a7]\n"
+
+#if __riscv_float_abi_single == 1
+        "flw fa0, %[fa0]\n"
+        "flw fa1, %[fa1]\n"
+        "flw fa2, %[fa2]\n"
+        "flw fa3, %[fa3]\n"
+        "flw fa4, %[fa4]\n"
+        "flw fa5, %[fa5]\n"
+        "flw fa6, %[fa6]\n"
+        "flw fa7, %[fa7]\n"
+#elif __riscv_float_abi_double == 1
+        "fld fa0, %[fa0]\n"
+        "fld fa1, %[fa1]\n"
+        "fld fa2, %[fa2]\n"
+        "fld fa3, %[fa3]\n"
+        "fld fa4, %[fa4]\n"
+        "fld fa5, %[fa5]\n"
+        "fld fa6, %[fa6]\n"
+        "fld fa7, %[fa7]\n"
+#endif
         
         // Call the function
         "jalr ra, %[func], 0\n"
         
-        // Capture return values (a0, a1 for all return types in ilp32)
-        "mv %[ret_lo], a0\n"
-        "mv %[ret_hi], a1\n"
-        
-        : [ret_lo] "=r" (result._raw32[0]),
-          [ret_hi] "=r" (result._raw32[1])
+        // Capture return values (a0, a1 for integer, fa0 for float/double)
+        "sw a0, %[ret_lo]\n"
+        "sw a1, %[ret_hi]\n"
+    #if __riscv_float_abi_single == 1
+        "fsw fa0, %[ret_fp]\n"
+    #elif __riscv_float_abi_double == 1
+        "fsd fa0, %[ret_fp]\n"
+    #endif   
+        : [ret_lo] "=m" (result._raw32[0]),
+          [ret_hi] "=m" (result._raw32[1])
+    #if __riscv_float_abi_single == 1
+          ,[ret_fp] "=m" (result_fp.f)
+    #elif __riscv_float_abi_double == 1
+          ,[ret_fp] "=m" (result_fp.d)
+    #endif
         
         : [func] "r" (function),
           // Integer registers
-          [a0] "r" (integar_argument_regs[0]),
-          [a1] "r" (integar_argument_regs[1]),
-          [a2] "r" (integar_argument_regs[2]),
-          [a3] "r" (integar_argument_regs[3]),
-          [a4] "r" (integar_argument_regs[4]),
-          [a5] "r" (integar_argument_regs[5]),
-          [a6] "r" (integar_argument_regs[6]),
-          [a7] "r" (integar_argument_regs[7])
-        
+          [a0] "m" (integar_argument_regs[0]),
+          [a1] "m" (integar_argument_regs[1]),
+          [a2] "m" (integar_argument_regs[2]),
+          [a3] "m" (integar_argument_regs[3]),
+          [a4] "m" (integar_argument_regs[4]),
+          [a5] "m" (integar_argument_regs[5]),
+          [a6] "m" (integar_argument_regs[6]),
+          [a7] "m" (integar_argument_regs[7])
+          #if __riscv_float_abi_single == 1
+          ,[fa0] "m" (fp_argument_regs[0].f),
+          [fa1] "m" (fp_argument_regs[1].f),
+          [fa2] "m" (fp_argument_regs[2].f),
+          [fa3] "m" (fp_argument_regs[3].f),
+          [fa4] "m" (fp_argument_regs[4].f),
+          [fa5] "m" (fp_argument_regs[5].f),
+          [fa6] "m" (fp_argument_regs[6].f),
+          [fa7] "m" (fp_argument_regs[7].f)
+          #elif __riscv_float_abi_double == 1
+          ,[fa0] "m" (fp_argument_regs[0].d),
+          [fa1] "m" (fp_argument_regs[1].d),
+          [fa2] "m" (fp_argument_regs[2].d),
+          [fa3] "m" (fp_argument_regs[3].d),
+          [fa4] "m" (fp_argument_regs[4].d),
+          [fa5] "m" (fp_argument_regs[5].d),
+          [fa6] "m" (fp_argument_regs[6].d),
+          [fa7] "m" (fp_argument_regs[7].d)
+          #endif
         // Clobbered registers
-        : "ra", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
-          "t0", "t1", "t2", "t3", "t4", "t5", "t6", "memory"
+        : "ra", 
+          "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
+          "t0", "t1", "t2", "t3", "t4", "t5", "t6",
+          #if __riscv_float_abi_single != 1
+          "fa0", "fa1", "fa2", "fa3", "fa4", "fa5", "fa6", "fa7",
+          "ft0", "ft1", "ft2", "ft3", "ft4", "ft5", "ft6", "ft7",
+          "ft8", "ft9", "ft10", "ft11",
+          #endif
+          "memory"
     );
 
     // Restore stack if needed
@@ -150,6 +262,14 @@ return_value_t universal_caller(func_t* func) {
         );
     }
 
+#if __riscv_float_abi_soft == 1
     return result;
+#elif __riscv_float_abi_single == 1
+    return (func->ret_type == RET_FLOAT) ? result_fp : result;
+#elif __riscv_float_abi_double == 1
+    return ((func->ret_type == RET_DOUBLE) || (func->ret_type == RET_FLOAT)) ? result_fp : result;
+#else
+    #error "unknown abi"
+#endif
 }
 #pragma GCC diagnostic pop

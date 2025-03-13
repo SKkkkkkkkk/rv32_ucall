@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <limits.h>
+#include <math.h>
 #include "universal_caller.h"
 
 // Include test functions directly
@@ -338,6 +339,172 @@ void main(void) {
     };
     result = universal_caller(&func);
     verify_int32("test_variadic", result.i, 150); // 10 + 20 + 30 + 40 + 50 = 150
+
+    // Test 14: Complex stack parameters test
+    printf("\nTest 14: Complex stack parameters test\n");
+    func = (func_t){
+        .func = test_complex_stack_params,
+        .ret_type = RET_LONG_LONG,
+        .arg_count = 12,
+        .args = (arg_t[]){
+            {ARG_CHAR, {.c = 1}},            // int8_t
+            {ARG_SHORT, {.s = 2}},           // uint16_t 
+            {ARG_INT, {.i = 3}},             // int32_t
+            {ARG_LONG_LONG, {.ll = 4LL}},    // uint64_t
+            {ARG_FLOAT, {.f = 5.0f}},        // float
+            {ARG_DOUBLE, {.d = 6.0}},        // double
+            {ARG_POINTER, {.p = (void*)7}},  // void*
+            {ARG_CHAR, {.c = 8}},            // int8_t
+            {ARG_INT, {.i = 9}},             // uint32_t
+            {ARG_LONG_LONG, {.ll = 10LL}},   // int64_t
+            {ARG_FLOAT, {.f = 11.0f}},       // float
+            {ARG_DOUBLE, {.d = 12.0}}        // double
+        }
+    };
+    result = universal_caller(&func);
+    verify_int64("test_complex_stack_params", result.ll, 78); // 1+2+3+4+5+6+7+8+9+10+11+12=78
+
+    // Test 15: Unsigned types test
+    printf("\nTest 15: Unsigned types test\n");
+    func = (func_t){
+        .func = test_unsigned_types,
+        .ret_type = RET_LONG_LONG,
+        .arg_count = 4,
+        .args = (arg_t[]){
+            {ARG_CHAR, {.c = 0xFF}},         // uint8_t
+            {ARG_SHORT, {.s = 0xFFFF}},      // uint16_t
+            {ARG_INT, {.i = 0xFFFFFFFF}},    // uint32_t
+            {ARG_LONG_LONG, {.ll = 0xFFFFFFFFFFFFFFFFULL}} // uint64_t
+        }
+    };
+    result = universal_caller(&func);
+    // 255 + 65535 + 4294967295 + 18446744073709551615 = 18446744078004584700
+    verify_int64("test_unsigned_types", result.ll, 0xFF + 0xFFFF + 0xFFFFFFFF + 0xFFFFFFFFFFFFFFFFULL);
+
+    // Test 16: Many floats test
+    printf("\nTest 16: Many floats test\n");
+    func = (func_t){
+        .func = test_many_floats,
+        .ret_type = RET_FLOAT,
+        .arg_count = 10,
+        .args = (arg_t[]){
+            {ARG_LONG_LONG, {.ll = 1LL}},
+            {ARG_FLOAT, {.f = 2.0f}},
+            {ARG_FLOAT, {.f = 3.0f}},
+            {ARG_FLOAT, {.f = 4.0f}},
+            {ARG_FLOAT, {.f = 5.0f}},
+            {ARG_FLOAT, {.f = 6.0f}},
+            {ARG_FLOAT, {.f = 7.0f}},
+            {ARG_FLOAT, {.f = 8.0f}},
+            {ARG_FLOAT, {.f = 9.0f}},
+            {ARG_FLOAT, {.f = 10.0f}}
+        }
+    };
+    result = universal_caller(&func);
+    verify_float("test_many_floats", result.f, 55.0f); // 1+2+3+4+5+6+7+8+9+10=55
+
+    // Test 17: Mixed many arguments test
+    printf("\nTest 17: Mixed many arguments test\n");
+    func = (func_t){
+        .func = test_mixed_many_args,
+        .ret_type = RET_DOUBLE,
+        .arg_count = 16,
+        .args = (arg_t[]){
+            {ARG_INT, {.i = 1}},
+            {ARG_FLOAT, {.f = 2.0f}},
+            {ARG_INT, {.i = 3}},
+            {ARG_FLOAT, {.f = 4.0f}},
+            {ARG_INT, {.i = 5}},
+            {ARG_FLOAT, {.f = 6.0f}},
+            {ARG_INT, {.i = 7}},
+            {ARG_FLOAT, {.f = 8.0f}},
+            {ARG_INT, {.i = 9}},
+            {ARG_FLOAT, {.f = 10.0f}},
+            {ARG_INT, {.i = 11}},
+            {ARG_FLOAT, {.f = 12.0f}},
+            {ARG_INT, {.i = 13}},
+            {ARG_FLOAT, {.f = 14.0f}},
+            {ARG_INT, {.i = 15}},
+            {ARG_FLOAT, {.f = 16.0f}}
+        }
+    };
+    result = universal_caller(&func);
+    verify_double("test_mixed_many_args", result.d, 136.0); // 1+2+3+4+5+6+7+8+9+10+11+12+13+14+15+16=136
+
+    // Test 18: Float extremes test
+    printf("\nTest 18: Float extremes test\n");
+    // Prepare special floating point values
+    float float_zero = 0.0f;
+    float float_inf = __builtin_inff();  // Use compiler builtin for infinity
+    float float_neg_inf = -__builtin_inff();
+    float float_nan = __builtin_nanf("");
+    double double_min = __DBL_MIN__;  // Smallest positive normalized double
+    double double_max = __DBL_MAX__;  // Largest positive double
+    
+    func = (func_t){
+        .func = test_float_extremes,
+        .ret_type = RET_DOUBLE,
+        .arg_count = 6,
+        .args = (arg_t[]){
+            {ARG_FLOAT, {.f = float_zero}},
+            {ARG_FLOAT, {.f = float_inf}},
+            {ARG_FLOAT, {.f = float_neg_inf}},
+            {ARG_FLOAT, {.f = float_nan}},
+            {ARG_DOUBLE, {.d = double_min}},
+            {ARG_DOUBLE, {.d = double_max}}
+        }
+    };
+    result = universal_caller(&func);
+    verify_double("test_float_extremes", result.d, double_min + double_max);
+
+    // Test 19: Bit operations test
+    printf("\nTest 19: Bit operations test\n");
+    int8_t bit_op_a1 = 0xA5;
+    uint16_t bit_op_a2 = 0xCDEF;
+    int32_t bit_op_a3 = 0x12345678;
+    uint64_t bit_op_a4 = 0x8765432100000000ULL;
+    
+    func = (func_t){
+        .func = test_bit_operations,
+        .ret_type = RET_LONG_LONG,
+        .arg_count = 4,
+        .args = (arg_t[]){
+            {ARG_CHAR, {.c = bit_op_a1}},
+            {ARG_SHORT, {.s = bit_op_a2}},
+            {ARG_INT, {.i = bit_op_a3}},
+            {ARG_LONG_LONG, {.ll = bit_op_a4}}
+        }
+    };
+    result = universal_caller(&func);
+    uint64_t expected_bit_result = ((uint64_t)(uint8_t)bit_op_a1 & 0xFF) | 
+                                  ((uint64_t)bit_op_a2 << 8) | 
+                                  ((uint64_t)(uint32_t)bit_op_a3 << 24) |
+                                  (bit_op_a4 & 0xFFFFFFFF00000000ULL);
+    verify_int64("test_bit_operations", result.ll, expected_bit_result);
+
+    // Test 20: Float register and stack test
+    printf("\nTest 20: Float register and stack test\n");
+    func = (func_t){
+        .func = test_float_reg_and_stack,
+        .ret_type = RET_DOUBLE,
+        .arg_count = 12,
+        .args = (arg_t[]){
+            {ARG_DOUBLE, {.d = 1.0}},
+            {ARG_DOUBLE, {.d = 2.0}},
+            {ARG_DOUBLE, {.d = 3.0}},
+            {ARG_DOUBLE, {.d = 4.0}},
+            {ARG_DOUBLE, {.d = 5.0}},
+            {ARG_DOUBLE, {.d = 6.0}},
+            {ARG_DOUBLE, {.d = 7.0}},
+            {ARG_DOUBLE, {.d = 8.0}},
+            {ARG_DOUBLE, {.d = 9.0}},
+            {ARG_DOUBLE, {.d = 10.0}},
+            {ARG_DOUBLE, {.d = 11.0}},
+            {ARG_DOUBLE, {.d = 12.0}}
+        }
+    };
+    result = universal_caller(&func);
+    verify_double("test_float_reg_and_stack", result.d, 78.0); // 1+2+3+4+5+6+7+8+9+10+11+12=78
 
     printf("\n=== All tests completed ===\n");
 }

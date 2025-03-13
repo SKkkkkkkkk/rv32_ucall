@@ -102,3 +102,75 @@ int32_t test_variadic(int count, ...) {
     va_end(args);
     return sum;
 }
+
+/**
+ * Test complex parameter combinations that exceed 8 parameters
+ * Tests handling of different sized types on stack
+ */
+int64_t test_complex_stack_params(int8_t a1, uint16_t a2, int32_t a3, uint64_t a4,
+                                 float a5, double a6, void* a7, int8_t a8,
+                                 uint32_t a9, int64_t a10, float a11, double a12) {
+    return a1 + a2 + a3 + a4 + a5 + a6 + (intptr_t)a7 + a8 + a9 + a10 + a11 + a12;
+}
+
+/**
+ * Test unsigned types with various bit widths
+ */
+uint64_t test_unsigned_types(uint8_t a1, uint16_t a2, uint32_t a3, uint64_t a4) {
+    return a1 + a2 + a3 + a4;
+}
+
+/**
+ * Test many floating point arguments (more than 8 fa registers)
+ */
+float test_many_floats(int64_t a, float f1, float f2, float f3, float f4, float f5, 
+                      float f6, float f7, float f8, float f9) {
+    return a + f1 + f2 + f3 + f4 + f5 + f6 + f7 + f8 + f9;
+}
+
+/**
+ * Test with mix of many integer and floating point arguments
+ * This tests proper register allocation between GPRs and FPRs
+ */
+double test_mixed_many_args(int32_t a1, float f1, int32_t a2, float f2,
+                          int32_t a3, float f3, int32_t a4, float f4,
+                          int32_t a5, float f5, int32_t a6, float f6,
+                          int32_t a7, float f7, int32_t a8, float f8) {
+    return a1 + f1 + a2 + f2 + a3 + f3 + a4 + f4 + a5 + f5 + a6 + f6 + a7 + f7 + a8 + f8;
+}
+
+/**
+ * Test extreme values for floating point arguments
+ */
+#pragma GCC push_options
+#pragma GCC optimize ("no-fast-math")
+double test_float_extremes(float zero, float inf, float neg_inf, float nan,
+                          double min_normal, double max_normal) {
+    // Simple operations with special values
+    if ((zero == 0.0f) && isinf(inf) && isinf(neg_inf) && isnan(nan)) {
+        return min_normal + max_normal;
+    }
+    return 0.0;
+}
+#pragma GCC pop_options
+
+/**
+ * Test mixing signed and unsigned with bit masking operations
+ */
+uint64_t test_bit_operations(int8_t a1, uint16_t a2, int32_t a3, uint64_t a4) {
+    return ((uint64_t)(uint8_t)a1 & 0xFF) | 
+           ((uint64_t)a2 << 8) | 
+           ((uint64_t)(uint32_t)a3 << 24) |
+           (a4 & 0xFFFFFFFF00000000ULL);
+}
+
+/**
+ * Test with maximum number of floating point register arguments
+ * plus additional float arguments that must go on stack
+ */
+double test_float_reg_and_stack(
+    double d1, double d2, double d3, double d4, double d5, double d6, double d7, double d8,
+    double d9, double d10, double d11, double d12) {
+    
+    return d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8 + d9 + d10 + d11 + d12;
+}

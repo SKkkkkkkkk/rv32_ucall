@@ -11,9 +11,9 @@ OBJ_DIR = $(BUILD_DIR)/objs
 DEP_DIR = $(BUILD_DIR)/deps
 
 # 编译标志
-ARCH = -march=rv32g -mabi=ilp32
+ARCH = -march=rv32imfd -mabi=ilp32d
 OPT_FLAGS ?= -Ofast
-CFLAGS = $(ARCH) $(OPT_FLAGS) -Wall -Wextra -Wno-main -fanalyzer -MMD -MP -MF $(DEP_DIR)/$*.d
+CFLAGS = $(ARCH) $(OPT_FLAGS) -Wall -Wextra -Wno-main -Wno-unused-label -fanalyzer -MMD -MP -MF $(DEP_DIR)/$*.d
 LDFLAGS = $(ARCH) \
 -static -nostartfiles \
 -Wl,--no-warn-rwx-segments \
