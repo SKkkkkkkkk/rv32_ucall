@@ -1,5 +1,6 @@
 build/
 .venv/
 .vscode/
+.cursor/
 reports/
 compile_commands.json
