@@ -8,7 +8,6 @@
 #ifndef UNIVERSAL_CALLER_H
 #define UNIVERSAL_CALLER_H
 
-#include <stddef.h>
 #include <stdint.h>
 
 /**

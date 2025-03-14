@@ -1,7 +1,6 @@
 #include "universal_caller.h"
 #include <assert.h>
-#include <stdarg.h>
-#include <stdint.h>
+#include <stddef.h>
 
 #if __riscv_float_abi_soft == 1
 #pragma message("ilp32")
