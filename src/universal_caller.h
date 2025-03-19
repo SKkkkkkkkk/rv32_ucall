@@ -8,12 +8,16 @@
 #ifndef UNIVERSAL_CALLER_H
 #define UNIVERSAL_CALLER_H
 
+#include <stddef.h>
 #include <stdint.h>
+
+_Static_assert(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__,
+               "Host must be little-endian!");
 
 /**
  * Argument types supported by the universal caller
  */
-typedef enum {
+typedef enum : uint32_t {
   ARG_CHAR,      // 32-bit
   ARG_SHORT,     // 32-bit
   ARG_INT,       // 32-bit
@@ -27,7 +31,7 @@ typedef enum {
 /**
  * Return types supported by the universal caller
  */
-typedef enum {
+typedef enum : uint32_t {
   RET_VOID,      // No return value
   RET_CHAR,      // 32-bit
   RET_SHORT,     // 32-bit
@@ -65,8 +69,15 @@ typedef union {
   int64_t ll; // long long
   float f;    // float
   double d;   // double
-  void *p;    // pointer
+#if (__riscv == 1) && (__riscv_xlen == 32)
+  void *p; // pointer
+#else
+  uint32_t p;
+#endif
 } arg_value_t;
+_Static_assert(sizeof(arg_value_t) == 8, "arg_value_t 大小必须为 8 字节");
+_Static_assert(sizeof(float) == 4, "float 大小必须为 4 字节");
+_Static_assert(sizeof(double) == 8, "double 大小必须为 8 字节");
 
 /**
  * Structure representing a single argument with its type and value
@@ -75,16 +86,32 @@ typedef struct {
   arg_type_t type;   // Type of the argument
   arg_value_t value; // Value of the argument
 } arg_t;
+_Static_assert(sizeof(arg_t) == 16, "arg_t 大小必须为 16 字节");
+_Static_assert(offsetof(arg_t, type) == 0, "arg_t.type 偏移错误");
+_Static_assert(offsetof(arg_t, value) == 8, "arg_t.value 偏移错误");
 
 /**
  * Structure representing a function to be called with all necessary information
  */
 typedef struct {
-  void *func;          // Function pointer to call
+#if (__riscv == 1) && (__riscv_xlen == 32)
+  void *func; // Function pointer to call
+#else
+  uint32_t func;
+#endif
   ret_type_t ret_type; // Return type of the function
-  int arg_count;       // Number of arguments
-  arg_t *args;         // Array of arguments
+  int32_t arg_count;   // Number of arguments
+#if (__riscv == 1) && (__riscv_xlen == 32)
+  arg_t *args; // Array of arguments
+#else
+  uint32_t args; // Array of arguments
+#endif
 } func_t;
+_Static_assert(sizeof(func_t) == 16, "func_t 大小必须为 16 字节");
+_Static_assert(offsetof(func_t, func) == 0, "func_t.func 偏移错误");
+_Static_assert(offsetof(func_t, ret_type) == 4, "func_t.ret_type 偏移错误");
+_Static_assert(offsetof(func_t, arg_count) == 8, "func_t.arg_count 偏移错误");
+_Static_assert(offsetof(func_t, args) == 12, "func_t.args 偏移错误");
 
 /**
  * Call a function described by the func_t structure
